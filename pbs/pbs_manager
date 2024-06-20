@@ -1,0 +1,156 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from __future__ import print_function
+import os
+import re
+import sys
+import glob
+import argparse
+import subprocess
+
+DB_FILE = '~/scripts/pbs_records.txt'
+REMOTE_HOST = "vlab"
+REMOTE_DIRECTORY = "pbsdata"
+COMMAND = "/opt/tsce4/torque6/bin/qstat"
+
+def find_files(directory, number_string):
+    pattern = os.path.join(directory, '*' + number_string)
+    files = glob.glob(pattern)
+    return files[:3]  # Return at most 3 files
+
+def scp_files(files, remote_host, remote_directory):
+    for file in files:
+        scp_command = ["scp", file, "{}:{}".format(remote_host, remote_directory)]
+        subprocess.check_call(scp_command)
+
+
+def check_and_mail(directory, number_string):
+    files = find_files(directory, number_string)
+    if not files:
+        print("No files found with the given number string.")
+        return
+
+    try:
+        scp_files(files, REMOTE_HOST, REMOTE_DIRECTORY)
+        remote_files = ' '.join([os.path.join(REMOTE_DIRECTORY, os.path.basename(file)) for file in files])
+        remote_command = ["ssh",REMOTE_HOST,'python3 scripts/send_mail.py --subject "PBS-NOTICE" --body_start "PBS-Job-Finished" --config scripts/config.ini --files {}'.format(remote_files)]
+        subprocess.check_call(remote_command)
+    except subprocess.CalledProcessError as e:
+        print("Error: {}".format(e))
+
+def read_records():
+    db_file_path = os.path.expanduser(DB_FILE)
+    if not os.path.exists(db_file_path):
+        return []
+
+    with open(db_file_path, 'r') as file:
+        records = [line.strip().split(' ', 1) for line in file.readlines()]
+    return records
+
+def write_records(records):
+    db_file_path = os.path.expanduser(DB_FILE)
+    with open(db_file_path, 'w') as file:
+        for number_string, directory in records:
+            file.write("{0} {1}\n".format(number_string, directory))
+
+def add_record(directory, number_string):
+    if not number_string.isdigit():
+        print("Error: The number string must be numeric.")
+        return
+
+    absolute_directory = os.path.abspath(directory)
+
+    if not os.path.isdir(absolute_directory):
+        print("Error: The directory is not valid.")
+        return
+
+    records = read_records()
+    for record in records:
+        if record[0] == number_string:
+            print("Error: The number string must be unique.")
+            return
+
+    records.append((number_string, absolute_directory))
+    write_records(records)
+    print("Record added.")
+
+def delete_record(number_string):
+    records = read_records()
+    new_records = [record for record in records if record[0] != number_string]
+
+    if len(new_records) == len(records):
+        print("Error: The number string was not found.")
+        return False
+
+    write_records(new_records)
+    print("Record deleted.")
+    return True
+
+def list_records():
+    records = read_records()
+    if not records:
+        print("No records found.")
+        return
+
+    for number_string, directory in records:
+        print("{0} {1}".format(number_string, directory))
+
+def check_and_process_records():
+    records = read_records()
+    if not records:
+        print("checking: No records found.")
+        return
+    else:
+        for number_string, directory in records:
+            print("checking: {0} {1}".format(number_string, directory))
+
+    # Get qstat output
+    try:
+        qstat_output = subprocess.check_output([COMMAND]).decode('utf-8')
+    except subprocess.CalledProcessError as e:
+        print("Error: Failed to execute qstat.")
+        return
+
+    qstat_numbers = set(re.findall(r'(\d+)\.\w+', qstat_output))
+    # qstat_numbers = set(line.split()[0] for line in qstat_output.splitlines() if line.strip())
+
+    for number_string, directory in records:
+        if number_string not in qstat_numbers:
+            check_and_mail(directory, number_string)
+            print("Processed record:", number_string)
+            delete_record(number_string)
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Manage records of directories and number strings.')
+    subparsers = parser.add_subparsers(dest='command', help='Commands')
+
+    add_parser = subparsers.add_parser('add', help='Add a new record')
+    add_parser.add_argument('number_string', help='The number string of the record')
+    add_parser.add_argument('-d', '--directory', default=os.getcwd(), help='The directory of the record (default: current directory)')
+
+    del_parser = subparsers.add_parser('del', help='Delete an existing record')
+    del_parser.add_argument('number_string', help='The number string of the record to delete')
+
+    subparsers.add_parser('list', help='List all records')
+
+    # Parse arguments, allow for no arguments case
+    if len(sys.argv) == 1:
+        args = argparse.Namespace(command='check')
+    else:
+        args = parser.parse_args()
+
+    if args.command == 'add':
+        add_record(args.directory, args.number_string)
+    elif args.command == 'del':
+        delete_record(args.number_string)
+    elif args.command == 'list':
+        list_records()
+    elif args.command == 'check':
+        check_and_process_records()
+    else:
+        parser.print_help()
+
+if __name__ == "__main__":
+    main()

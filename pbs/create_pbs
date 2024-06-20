@@ -1,0 +1,100 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import os
+import re
+import argparse
+import sys
+
+# Compatibility for input
+if sys.version_info[0] < 3:
+    input = raw_input
+
+# ANSI escape sequences for colors
+RED = '\033[91m'
+GREEN = '\033[92m'
+RESET = '\033[0m'
+
+def prompt_user_input(prompt, validate_func=None):
+    while True:
+        value = input(prompt)
+        if validate_func is None or validate_func(value):
+            return value
+        print(RED + "Invalid input. Please try again." + RESET)
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Generate PBS script with given parameters.",
+        usage="%(prog)s [-h] [-N NAME] [-q QUEUE] [-l NODES] [-r COMMAND]"
+    )
+    parser.add_argument("-N", "--name", help="Job name (up to 15 characters, no spaces)")
+    parser.add_argument("-q", "--queue", choices=["cu1", "cu2"], help="Queue name (cu1 or cu2)")
+    parser.add_argument("-l", "--nodes", type=int, choices=range(1, 21), metavar="[1-20]", help="Number of nodes (1-20)")
+    parser.add_argument("-r", "--command", help="Command to run")
+
+    args = parser.parse_args()
+
+    if args.name:
+        job_name = args.name
+    else:
+        job_name = prompt_user_input("Enter job name (up to 15 characters, no spaces): ",
+                                     lambda x: len(x) <= 15 and re.match("^[a-zA-Z0-9_]+$", x))
+
+    if args.queue:
+        queue_name = args.queue
+    else:
+        queue_name = prompt_user_input("Enter queue name (cu1 or cu2): ",
+                                       lambda x: x in ["cu1", "cu2"])
+
+    if args.nodes:
+        num_nodes = args.nodes
+    else:
+        num_nodes = int(prompt_user_input("Enter the number of nodes (1-20): ",
+                                          lambda x: x.isdigit() and 1 <= int(x) <= 20))
+
+    ppn = 28 if queue_name == "cu1" else 16
+
+    run_command = args.command if args.command else "echo 'running...'"
+
+    pbs_script = """#!/bin/bash
+
+# This PBS script is created via create_pbs.py.
+
+#PBS -N {job_name}
+#PBS -q {queue_name}
+#PBS -l nodes={num_nodes}:ppn={ppn}
+#PBS -l walltime=24000:00:00
+
+cd $PBS_O_WORKDIR
+
+date
+
+# command
+{run_command}
+
+date
+""".format(job_name=job_name, queue_name=queue_name, num_nodes=num_nodes, ppn=ppn, run_command=run_command)
+
+    output_file = "{}.job".format(job_name)
+
+    if os.path.exists(output_file):
+        print(RED + "Error: PBS script {} already exists.".format(output_file) + RESET)
+        return
+
+    with open(output_file, 'w') as f:
+        f.write(pbs_script)
+
+    # Output key information to the console
+    print("PBS script generated and saved to {}:".format(output_file))
+    print(GREEN + "     Job name: {}".format(job_name) + RESET)
+    print(GREEN + "     Queue name: {}".format(queue_name) + RESET)
+    print(GREEN + "     Number of nodes: {}".format(num_nodes) + RESET)
+    if args.command:
+        print(GREEN + "     Command: {}".format(run_command) + RESET)
+    else:
+        print("--------------------------------------")
+        print(RED + "YOU SHOULD ADD COMMANDS TO PBS SCRIPT!" + RESET)
+        print("--------------------------------------")
+
+if __name__ == "__main__":
+    main()

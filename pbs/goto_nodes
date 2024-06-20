@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# get first free node
+first_node=$(pbsnodes -l free | head -n 1 | awk '{print $1}')
+
+# check free nodes
+if [ -z "$first_node" ]; then
+    echo "No free nodes available."
+else
+    echo "Connecting to $first_node..."
+    ssh "$first_node"
+fi

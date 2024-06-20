@@ -1,0 +1,10 @@
+#!/bin/bash
+
+if [ "$#" -ne 1 ]; then
+    echo "Usage: $0 <script_path>"
+    exit 1
+fi
+
+SCRIPT_PATH=$1
+
+matlab -nodisplay -nosplash -nodesktop -r "try, run('$SCRIPT_PATH'); catch ME, disp(ME.message); exit(1); end; exit;"
