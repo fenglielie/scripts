@@ -1,0 +1,7 @@
+{
+    "webDavUrl": "https://xxxxx.com/dav/",
+    "username": "xxxxxx@qq.com",
+    "password": "xxxxxxxxxxx",
+    "fileExtension": ".pdf",
+    "localBackupDir": "path/to/local/backup/dir"
+}
