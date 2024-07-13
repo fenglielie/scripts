@@ -1,0 +1,20 @@
+{
+    "note": {
+        "directoryPrefix": "Note-",
+        "templateDirectory": ".simplenote",
+        "templateFiles": {
+            "mainTemplate": "main-quickstart.tex",
+            "classFile": "simplenote.cls"
+        },
+        "rootDirectory": "D:\\ProjectRoot\\Work\\STUDY-NOTE"
+    },
+    "report": {
+        "directoryPrefix": "Report-",
+        "templateDirectory": ".simplebeamer",
+        "templateFiles": {
+            "mainTemplate": "main-quickstart.tex",
+            "classFile": "simplebeamer.tex"
+        },
+        "rootDirectory": "D:\\ProjectRoot\\Work\\STUDY-NOTE"
+    }
+}
