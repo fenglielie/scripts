@@ -1,0 +1,8 @@
+{
+    "backup_paths": [
+        "file1",
+        "dir1"
+    ],
+    "destination": "path/to/backup/",
+    "max_backups": 10
+}
