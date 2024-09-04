@@ -4,6 +4,10 @@ import sys
 import yaml
 
 error_count = 0
+warning_count = 0
+
+# 允许的 YAML 项
+ALLOWED_YAML_KEYS = {"title", "date", "categories", "tags", "abbrlink", "hide"}
 
 
 def read_yaml_header(file_path):
@@ -32,7 +36,7 @@ def parse_yaml(yaml_text):
 
 def check_file_path(file_path, root_dir):
     """检查文件路径与分类是否匹配，并验证合法性"""
-    global error_count
+    global error_count, warning_count
 
     relative_path = os.path.relpath(file_path, root_dir)
     # 将相对路径分成目录和文件名
@@ -40,6 +44,16 @@ def check_file_path(file_path, root_dir):
 
     # 读取文件头部的YAML元数据
     header = read_yaml_header(file_path)
+
+    # 检查 YAML 中是否有不合法的项
+    for key in header.keys():
+        if key not in ALLOWED_YAML_KEYS:
+            warning_count += 1
+            print(
+                f"Warning[{warning_count}]: Invalid YAML key '{key}' in file '{file_path}'. "
+                f"Allowed keys are: {', '.join(ALLOWED_YAML_KEYS)}."
+            )
+
     if "categories" in header:
         categories = header["categories"]
 
@@ -98,5 +112,10 @@ if __name__ == "__main__":
 
     if error_count == 0:
         print("headcheck: pass")
+    else:
+        print(f"headcheck: {error_count} errors found.")
+
+    if warning_count > 0:
+        print(f"headcheck: {warning_count} warnings found.")
 
     sys.exit(error_count)

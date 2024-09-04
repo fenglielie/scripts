@@ -6,6 +6,7 @@ allow_code_indent = False
 
 error_count = 0
 
+
 def is_list(line):
     s1 = line.startswith("* ") or line.startswith("- ") or line.startswith("+ ")
     s2 = (line == "*\n") or (line == "-\n") or (line == "+\n")
@@ -68,7 +69,16 @@ def check_format(lines):
     code_previous_line = ""  # 用于确保缩进一致
     latex_previous_line = ""  # 用于确保缩进一致
 
+    next_line_shoud_be_empty = False  # 用于跟踪下一行是否是空行
+
     for line in lines:
+        # 是否之前要求下一行是空行
+        if next_line_shoud_be_empty:
+            if not line.strip() == "":  # 下一行却不是空行
+                errors.append((line_number, previous_line, line, "empty line error"))
+
+            next_line_shoud_be_empty = False
+
         # 处于代码块边界时，检查代码块的缩进整齐
         if is_subcode(line):
             in_code_block = not in_code_block
@@ -93,7 +103,7 @@ def check_format(lines):
                     )
 
                 # 不允许代码块的退出边界的前一行是空行
-                if not previous_line.strip():
+                if previous_line.strip() == "":
                     errors.append(
                         (
                             line_number - 1,
@@ -102,6 +112,8 @@ def check_format(lines):
                             "code boundary empty line error",
                         )
                     )
+
+                next_line_shoud_be_empty = True  # 代码块的下一行必须是空行
 
         # 处于公式块边界时，检查公式块的缩进整齐
         if is_sublatex(line):
@@ -119,7 +131,7 @@ def check_format(lines):
                         (line_number, latex_previous_line, line, "latex error")
                     )
 
-        ## 如果当前不位于代码块或者公式块边界或内部，则会继续检查
+        # 如果当前不位于代码块或者公式块边界或内部，则会继续检查
         if (not in_code_block) and (not in_latex_block):
             # 检查当前行是否是列表，并且要求前一行非空
             if (is_list(line) or is_orderlist(line)) and previous_line.lstrip():
@@ -169,9 +181,11 @@ def main():
                 for error in errors:
                     if show_error:
                         print(f"[error {error_count+1}]:")
-                        print(f"[{error[3]}] at {md}:{error[0]}: \n{error[1]}{error[2]}")
+                        print(
+                            f"[{error[3]}] at {md}:{error[0]}: \n{error[1]}{error[2]}"
+                        )
                     error_count += 1
-            if error_count > 10 and show_error:
+            if error_count > 100 and show_error:
                 print("Too many errors...")
                 show_error = False
 
