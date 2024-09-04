@@ -17,7 +17,7 @@
 
 脚本的使用方式如下
 ```bash
-./create.py template_type [--remark REMARK] [--date DATE] [--move MOVE]
+python ./create.py template_type [--remark REMARK] [--date DATE] [--move MOVE]
         [--config CONFIG_FILE] [--root ROOT_DIRECTORY] [--name NAME]
 ```
 包括如下参数
@@ -35,13 +35,13 @@
 1. 使用默认配置文件和根目录：
 
 ```bash
-./create.py note --remark important_notes --date 2024-07-15
+python ./create.py note --remark important_notes --date 2024-07-15
 ```
 
 2. 指定自定义配置文件和根目录：
 
 ```bash
-./create.py report --remark daily_report --date 2024-07-15 --config /path/to/my/config.json --root /path/to/root/directory
+python ./create.py report --remark daily_report --date 2024-07-15 --config /path/to/my/config.json --root /path/to/root/directory
 ```
 
 ## 配置文件示例
