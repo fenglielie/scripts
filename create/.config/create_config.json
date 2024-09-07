@@ -4,31 +4,28 @@
     },
     "note": {
         "directoryPrefix": "Note-",
-        "mainTemplateUrl": "https://raw.githubusercontent.com/fenglielie/simplenote/main/main-quickstart.tex",
-        "classFileUrl": "https://raw.githubusercontent.com/fenglielie/simplenote/main/simplenote.cls",
+        "mainTemplateUrl": "https://raw.githubusercontent.com/fenglielie/simplelatex/main/note/main-quickstart.tex",
+        "classFileUrl": "https://raw.githubusercontent.com/fenglielie/simplelatex/main/note/simplenote.cls",
         "Author": "John Doe"
     },
-    "report": {
-        "directoryPrefix": "Report-",
-        "mainTemplateUrl": "https://raw.githubusercontent.com/fenglielie/simplebeamer/main/main-quickstart.tex",
-        "classFileUrl": [
-            "https://raw.githubusercontent.com/fenglielie/simplebeamer/main/simplebeamer.tex",
-            "https://raw.githubusercontent.com/fenglielie/simplebeamer/main/main.tex"
-        ],
+    "beamer": {
+        "directoryPrefix": "Beamer-",
+        "mainTemplateUrl": "https://raw.githubusercontent.com/fenglielie/simplelatex/main/beamer/main-quickstart.tex",
+        "classFileUrl": "https://raw.githubusercontent.com/fenglielie/simplelatex/main/beamer/simplebeamer.tex",
         "Author": "John Doe"
     },
     "book": {
         "directoryPrefix": "Book-",
-        "mainTemplateUrl": "https://raw.githubusercontent.com/fenglielie/simplebook/main/main-quickstart.tex",
+        "mainTemplateUrl": "https://raw.githubusercontent.com/fenglielie/simplelatex/main/book/main-quickstart.tex",
         "classFileUrl": [
-            "https://raw.githubusercontent.com/fenglielie/simplebook/main/simplebook.cls",
-            "https://raw.githubusercontent.com/fenglielie/simplebook/main/legao.jpg"
+            "https://raw.githubusercontent.com/fenglielie/simplelatex/main/book/simplebook.cls",
+            "https://raw.githubusercontent.com/fenglielie/simplelatex/main/book/legao.jpg"
         ],
         "Author": "John Doe"
     },
-    "lab-report": {
+    "report": {
         "directoryPrefix": "LabReport-",
-        "mainTemplateUrl": "https://raw.githubusercontent.com/fenglielie/simplereport/main/main-quickstart.tex",
+        "mainTemplateUrl": "https://raw.githubusercontent.com/fenglielie/simplelatex/main/report/main-quickstart.tex",
         "Author": "John Doe"
     }
 }
