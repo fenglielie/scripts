@@ -128,7 +128,7 @@ def create_info_file(dir_path, template_type, message=""):
         f"Path: {absolute_path}\n"
         f"Detail: {message}\n"
     )
-    with open(info_file_path, "w", encoding="utf-8") as f:
+    with open(info_file_path, "w", encoding="utf-8", newline="\n") as f:
         f.write(info_content)
     logging.info(f"Created info file: {info_file_path}")
 
