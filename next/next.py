@@ -120,12 +120,12 @@ def process_template_files(template_config, dir_path):
 def create_info_file(dir_path, template_type, message=""):
     """Create an info file in the directory with absolute path and template type."""
     info_file_path = os.path.join(dir_path, ".info")
-    absolute_path = os.path.abspath(dir_path)
+    relative_path = normalize_path_for_display(os.path.relpath(dir_path))
 
     info_content = (
         f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
         f"Type: {template_type}\n"
-        f"Path: {absolute_path}\n"
+        f"Name: {relative_path}\n"
         f"Detail: {message}\n"
     )
     with open(info_file_path, "w", encoding="utf-8", newline="\n") as f:
@@ -176,23 +176,6 @@ def read_info_file(info_path):
 
     logging.debug(f"Parsed info file: {info_path}")
     return info_data
-
-
-def rewrite_info_file(info_path, info_data):
-    """Rewrite the .info file with updated path information."""
-    content = []
-    if "date" in info_data:
-        content.append(f"Date: {info_data['date']}")
-    if "type" in info_data:
-        content.append(f"Type: {info_data['type']}")
-    if "path" in info_data:
-        content.append(f"Path: {info_data['path']}")
-    if "detail" in info_data:
-        content.append(f"Detail: {info_data['detail']}")
-
-    with open(info_path, "w") as f:
-        f.write("\n".join(content))
-    logging.debug(f"Updated info file: {info_path}")
 
 
 def find_pdf_files(directory):
@@ -251,15 +234,6 @@ def collect_and_display(
         info_data = read_info_file(info_file)
         folder_path = os.path.dirname(info_file)
 
-        # Check if Path is correct and rewrite if necessary
-        expected_path = os.path.abspath(folder_path)
-        if "path" in info_data and info_data["path"] != expected_path:
-            info_data["path"] = expected_path
-            rewrite_info_file(info_file, info_data)
-        elif "path" not in info_data:
-            info_data["path"] = expected_path
-            rewrite_info_file(info_file, info_data)
-
         pdf_files = find_pdf_files(folder_path)
 
         date_str = info_data.get("date", "Unknown Date")
@@ -269,7 +243,7 @@ def collect_and_display(
             "date": date_str,
             "date_obj": date_obj,
             "type": info_data.get("type", "Unknown Type"),
-            "name": os.path.relpath(folder_path, root_dir),
+            "name": info_data.get("name", "Unknown Name"),
             "full_path": folder_path,
             "pdf_files": pdf_files,
             "extra_text": info_data.get("detail", ""),
