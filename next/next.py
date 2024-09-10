@@ -28,10 +28,17 @@ def create_directory(path):
         os.makedirs(path)
 
 
+def shorten_url(url):
+    """Shorten a URL by replacing the middle part with '...' if it's too long."""
+    if len(url) > 100:
+        return f"{url[:30]}...{url[-30:]}"
+    return url
+
+
 def download_file(url, output_path):
     """Download a file from a URL."""
     try:
-        logging.info(f"Downloading {url}")
+        logging.info(f"Downloading {shorten_url(url)}")
         response = requests.get(url)
         response.raise_for_status()
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -130,7 +137,7 @@ def create_info_file(dir_path, template_type, message=""):
     )
     with open(info_file_path, "w", encoding="utf-8", newline="\n") as f:
         f.write(info_content)
-    logging.info(f"Created info file: {info_file_path}")
+    logging.info(f"Created info file: {normalize_path_for_display(info_file_path)}")
 
 
 def normalize_path_for_display(path):
@@ -178,15 +185,15 @@ def read_info_file(info_path):
     return info_data
 
 
-def find_pdf_files(directory):
-    """Find all PDF files in the given directory."""
-    pdf_files = [
+def find_files(directory, file_end):
+    """Find all files in the given directory."""
+    target_files = [
         os.path.join(directory, file)
         for file in os.listdir(directory)
-        if file.endswith(".pdf")
+        if file.endswith(file_end)
     ]
-    logging.debug(f"Found {len(pdf_files)} PDF files in {directory}")
-    return pdf_files
+    logging.debug(f"Found {len(target_files)} {file_end} files in {directory}")
+    return target_files
 
 
 def parse_date(date_string):
@@ -208,6 +215,9 @@ def log_git_style_entry(item):
 
     for pdf in item["pdf_files"]:
         print(f"    PDF: {normalize_path_for_display(pdf)}")
+
+    for md in item["md_files"]:
+        print(f"    MD: {normalize_path_for_display(md)}")
 
     if item["extra_text"]:
         print(f"\n    {item['extra_text']}")
@@ -234,7 +244,8 @@ def collect_and_display(
         info_data = read_info_file(info_file)
         folder_path = os.path.dirname(info_file)
 
-        pdf_files = find_pdf_files(folder_path)
+        pdf_files = find_files(folder_path, ".pdf")
+        md_files = find_files(folder_path, ".md")
 
         date_str = info_data.get("date", "Unknown Date")
         date_obj = parse_date(date_str) if date_str != "Unknown Date" else None
@@ -246,6 +257,7 @@ def collect_and_display(
             "name": info_data.get("name", "Unknown Name"),
             "full_path": folder_path,
             "pdf_files": pdf_files,
+            "md_files": md_files,
             "extra_text": info_data.get("detail", ""),
         }
 
