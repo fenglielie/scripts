@@ -73,7 +73,7 @@ def send_email(subject, body, sender, receiver, host, port, username, password):
     subject_with_timestamp = (
         f"{subject} [{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]"
     )
-    message["Subject"] = Header(subject_with_timestamp, "utf-8")
+    message["Subject"] = Header(subject_with_timestamp, "utf-8")   # type: ignore
 
     # Send email
     try:
