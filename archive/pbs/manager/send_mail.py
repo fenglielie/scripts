@@ -7,9 +7,10 @@ from email.header import Header
 import configparser
 from datetime import datetime
 
+
 def read_file_content(file_path):
     try:
-        with open(file_path, 'r', encoding='utf-8') as file:
+        with open(file_path, "r", encoding="utf-8") as file:
             content = file.read()
         return content
     except FileNotFoundError:
@@ -17,6 +18,7 @@ def read_file_content(file_path):
     except Exception as e:
         print(f"Error: Failed to read file '{file_path}'. Error: {e}")
     return None
+
 
 def prepare_email_body(body_start, file_paths):
     max_files = 3
@@ -38,7 +40,11 @@ def prepare_email_body(body_start, file_paths):
                 body_parts.append(f"\n\n----- File '{file_path}' Start -----\n")
                 # Truncate content if too long
                 if len(content) > max_content_length:
-                    content = content[:max_content_length//2] + "\n...\n" + content[-(max_content_length//2):]
+                    content = (
+                        content[: max_content_length // 2]
+                        + "\n...\n"
+                        + content[-(max_content_length // 2) :]
+                    )
                 body_parts.append(content)
                 body_parts.append(f"\n----- File '{file_path}' End -----\n\n")
             else:
@@ -49,13 +55,13 @@ def prepare_email_body(body_start, file_paths):
         else:
             error_messages.append(f"Failed to read file '{file_path}'")
 
-
     # Add error messages to the body
     if error_messages:
         body_parts.append("\n\n----- Error Log -----\n")
         body_parts.append("\n".join(error_messages))
 
     return "\n".join(body_parts)
+
 
 def send_email(subject, body, sender, receiver, host, port, username, password):
     # Create email message
@@ -64,7 +70,9 @@ def send_email(subject, body, sender, receiver, host, port, username, password):
     message["To"] = receiver
 
     # Add timestamp to the email subject
-    subject_with_timestamp = f"{subject} [{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]"
+    subject_with_timestamp = (
+        f"{subject} [{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]"
+    )
     message["Subject"] = Header(subject_with_timestamp, "utf-8")
 
     # Send email
@@ -76,15 +84,23 @@ def send_email(subject, body, sender, receiver, host, port, username, password):
     except smtplib.SMTPException as e:
         print(f"Error: Failed to send email. Error: {e}")
     finally:
-        smtpObj.quit() if 'smtpObj' in locals() else None
+        smtpObj.quit() if "smtpObj" in locals() else None
+
 
 def main():
     # Parse command-line arguments
-    parser = argparse.ArgumentParser(description='Send Email')
-    parser.add_argument('--subject', required=True, help='Email subject')
-    parser.add_argument('--body_start', help='Initial string of email body')
-    parser.add_argument('-f', '--files', nargs='+', help='Up to 3 text file paths as email body')
-    parser.add_argument('-c', '--config', default='config.ini', help='Configuration file path, default is config.ini')
+    parser = argparse.ArgumentParser(description="Send Email")
+    parser.add_argument("--subject", required=True, help="Email subject")
+    parser.add_argument("--body_start", help="Initial string of email body")
+    parser.add_argument(
+        "-f", "--files", nargs="+", help="Up to 3 text file paths as email body"
+    )
+    parser.add_argument(
+        "-c",
+        "--config",
+        default="config.ini",
+        help="Configuration file path, default is config.ini",
+    )
     args = parser.parse_args()
 
     # Create configparser object
@@ -94,12 +110,12 @@ def main():
     config.read(args.config)
 
     # Get email configuration
-    mail_user = config.get('email', 'username')
-    mail_pass = config.get('email', 'password')
-    sender = config.get('email', 'sender')
-    receiver = config.get('email', 'receiver')
-    host = config.get('email', 'host')
-    port = config.getint('email', 'port')
+    mail_user = config.get("email", "username")
+    mail_pass = config.get("email", "password")
+    sender = config.get("email", "sender")
+    receiver = config.get("email", "receiver")
+    host = config.get("email", "host")
+    port = config.getint("email", "port")
 
     # Prepare email body
     if args.files:
@@ -112,10 +128,11 @@ def main():
     # Send email
     send_email(args.subject, body, sender, receiver, host, port, mail_user, mail_pass)
 
+
 if __name__ == "__main__":
     main()
 
-'''
+"""
 [email]
 username = xxxxxxxxxxxxxxxx@163.com
 password = xxxxxxxxxxxxxxxx
@@ -123,4 +140,4 @@ sender = xxxxxxxxxxxxxxxx@163.com
 receiver = xxxxxxxxxxxxxxxx@qq.com
 host = smtp.163.com
 port = 465
-'''
+"""

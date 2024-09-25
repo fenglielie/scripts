@@ -14,38 +14,46 @@ import re
 if sys.version_info[0] < 3:
     input = raw_input  # Input function for Python 2
 
+
 def is_git_repository():
     try:
-        subprocess.check_output(['git', 'rev-parse', '--is-inside-work-tree'], stderr=subprocess.STDOUT)
+        subprocess.check_output(
+            ["git", "rev-parse", "--is-inside-work-tree"], stderr=subprocess.STDOUT
+        )
         return True
     except subprocess.CalledProcessError:
         return False
 
+
 def is_git_clean():
-    status = subprocess.check_output(['git', 'status', '--porcelain'])
-    return status == b''
+    status = subprocess.check_output(["git", "status", "--porcelain"])
+    return status == b""
+
 
 def get_git_commit_hash():
     try:
-        commit_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip()
-        return commit_hash.decode('utf-8')[:7]
+        commit_hash = subprocess.check_output(["git", "rev-parse", "HEAD"]).strip()
+        return commit_hash.decode("utf-8")[:7]
     except subprocess.CalledProcessError:
         return None
+
 
 def is_valid_directory_name(name):
     """
     Validate directory name to allow only letters, numbers, underscores, and hyphens.
     """
     # Allow only letters, numbers, underscores, and hyphens, and length between 1 and 255 characters
-    return re.match(r'^[\w\-_]{1,255}$', name) is not None
+    return re.match(r"^[\w\-_]{1,255}$", name) is not None
+
 
 def print_error(message):
     """
     Print error message in red.
     """
-    RED = '\033[91m'
-    RESET = '\033[0m'
+    RED = "\033[91m"
+    RESET = "\033[0m"
     print("{}Error: {}{}".format(RED, message, RESET), file=sys.stderr)
+
 
 def print_info(message):
     """
@@ -53,40 +61,53 @@ def print_info(message):
     """
     print("Info: {}".format(message))
 
+
 def print_success(message):
     """
     Print success message in green.
     """
-    GREEN = '\033[92m'
-    RESET = '\033[0m'
+    GREEN = "\033[92m"
+    RESET = "\033[0m"
     print("{}Success: {}{}".format(GREEN, message, RESET))
+
 
 def create_log_file(target_dir, action, desc=None, todo=None, commit_hash=None):
     """
     Create pbs.log file in the target directory and log the copy/clone action. Print a warning message if the file already exists.
     """
-    log_file_path = os.path.join(target_dir, 'pbs.log')
+    log_file_path = os.path.join(target_dir, "pbs.log")
     if os.path.exists(log_file_path):
-        print_info("pbs.log already exists in {}. No changes made to the log file.".format(target_dir))
+        print_info(
+            "pbs.log already exists in {}. No changes made to the log file.".format(
+                target_dir
+            )
+        )
     else:
         try:
-            with open(log_file_path, 'w') as log_file:
-                log_file.write("Directory {} on: {}\n".format(action, time.strftime("%Y-%m-%d %H:%M:%S")))
+            with open(log_file_path, "w") as log_file:
+                log_file.write(
+                    "Directory {} on: {}\n".format(
+                        action, time.strftime("%Y-%m-%d %H:%M:%S")
+                    )
+                )
                 log_file.write("Source directory: {}\n".format(os.getcwd()))
                 log_file.write("Target directory: {}\n".format(target_dir))
-                if action == 'cloned' and commit_hash:
+                if action == "cloned" and commit_hash:
                     log_file.write("Git commit hash: {}\n".format(commit_hash))
                 if desc:
                     log_file.write("Description: {}\n".format(desc))
                 if todo:
                     log_file.write("TODO: {}\n".format(todo))
-            print_success("Log file pbs.log created successfully in {}".format(target_dir))
+            print_success(
+                "Log file pbs.log created successfully in {}".format(target_dir)
+            )
             if desc:
                 print_info("Description: {}".format(desc))
             if todo:
                 print_info("TODO: {}".format(todo))
         except Exception as e:
             print_error("Error creating log file in {}: {}".format(target_dir, e))
+
 
 def clone_or_copy(current_dir, target_path, new_dir_name, desc=None, todo=None):
     """
@@ -99,18 +120,28 @@ def clone_or_copy(current_dir, target_path, new_dir_name, desc=None, todo=None):
         sys.exit(1)
 
     if is_git_repository() and is_git_clean():
-        user_input = input("The current directory is a clean git repository. Do you want to clone instead of copying? (y/n): ").strip().lower()
-        if user_input == 'y':
+        user_input = (
+            input(
+                "The current directory is a clean git repository. Do you want to clone instead of copying? (y/n): "
+            )
+            .strip()
+            .lower()
+        )
+        if user_input == "y":
             commit_hash = get_git_commit_hash()
             if commit_hash:
-                new_dir_name = "{}-{}".format(new_dir_name,commit_hash) # add hash
+                new_dir_name = "{}-{}".format(new_dir_name, commit_hash)  # add hash
                 target_dir = os.path.join(target_path, new_dir_name)
             try:
-                subprocess.check_call(['git', 'clone', current_dir, target_dir])
-                print_success("Successfully cloned {} to {}".format(current_dir, target_dir))
+                subprocess.check_call(["git", "clone", current_dir, target_dir])
+                print_success(
+                    "Successfully cloned {} to {}".format(current_dir, target_dir)
+                )
                 create_log_file(target_dir, "cloned", desc, todo, commit_hash)
             except subprocess.CalledProcessError as e:
-                print_error("Error cloning {} to {}: {}".format(current_dir, target_dir, e))
+                print_error(
+                    "Error cloning {} to {}: {}".format(current_dir, target_dir, e)
+                )
                 sys.exit(1)
 
             print_info("Please switch to the target directory using:")
@@ -128,15 +159,29 @@ def clone_or_copy(current_dir, target_path, new_dir_name, desc=None, todo=None):
     print_info("Please switch to the target directory using:")
     print("cd {}".format(os.path.join(target_path, new_dir_name)))
 
+
 def main():
-    parser = argparse.ArgumentParser(description="Clone or copy the current directory to a target location, and optionally log the action.")
-    parser.add_argument('-N', '--name', type=str, help="An optional meaningful string to add to the target directory name.")
-    parser.add_argument('--desc', type=str, help="An optional description to add to the log file.")
-    parser.add_argument('--todo', type=str, help="An optional TODO to add to the log file.")
+    parser = argparse.ArgumentParser(
+        description="Clone or copy the current directory to a target location, and optionally log the action."
+    )
+    parser.add_argument(
+        "-N",
+        "--name",
+        type=str,
+        help="An optional meaningful string to add to the target directory name.",
+    )
+    parser.add_argument(
+        "--desc", type=str, help="An optional description to add to the log file."
+    )
+    parser.add_argument(
+        "--todo", type=str, help="An optional TODO to add to the log file."
+    )
     args = parser.parse_args()
 
     if args.name and not is_valid_directory_name(args.name):
-        print_error("The provided name contains invalid characters. Only letters, numbers, underscores, and hyphens are allowed.")
+        print_error(
+            "The provided name contains invalid characters. Only letters, numbers, underscores, and hyphens are allowed."
+        )
         sys.exit(1)
 
     # Get the current directory and directory name
@@ -161,6 +206,7 @@ def main():
 
     # Clone or copy the current directory to the target path and rename it
     clone_or_copy(current_dir, target_path, new_dir_name, args.desc, args.todo)
+
 
 if __name__ == "__main__":
     main()
