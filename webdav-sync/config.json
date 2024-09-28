@@ -1,0 +1,22 @@
+{
+    "Dir1": {
+        "local_folder": "/local/path1",
+        "webdav_url": "https://example1.com/webdav/",
+        "username": "xxx",
+        "password": "xxx",
+        "include_extensions": [
+            ".md",
+            ".pdf"
+        ]
+    },
+    "Dir2": {
+        "local_folder": "/local/path2",
+        "webdav_url": "https://example2.com/webdav/",
+        "username": "xxx",
+        "password": "xxx",
+        "include_extensions": [
+            ".md",
+            ".pdf"
+        ]
+    }
+}
